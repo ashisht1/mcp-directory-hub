@@ -1,0 +1,471 @@
+[
+  {
+    "name": "n8n Workflow Automation Server",
+    "full_name": "n8n-io/n8n",
+    "html_url": "https://github.com/n8n-io/n8n",
+    "stars": 0,
+    "description": "Fair-code workflow automation platform with native AI capabilities. Combine visual building with custom code, self-host or cloud, 400+ integrations.",
+    "category": "Productivity & Communication",
+    "language": "JavaScript",
+    "installCommand": "npx",
+    "args": [
+      "n8n"
+    ],
+    "envVars": [],
+    "tools": [],
+    "resources": [
+      "400+ integrations",
+      "templates",
+      "AI & LangChain Guide",
+      "Community Forum",
+      "Community Tutorials"
+    ]
+  },
+  {
+    "name": "Gemini CLI",
+    "full_name": "google-gemini/gemini-cli",
+    "html_url": "https://github.com/google-gemini/gemini-cli",
+    "stars": 0,
+    "description": "An open-source AI agent that brings the power of Gemini directly into your terminal.",
+    "category": "AI & Knowledge",
+    "language": "JavaScript",
+    "installCommand": "npx @google/gemini-cli",
+    "args": [],
+    "envVars": [
+      {
+        "name": "GOOGLE_CLOUD_PROJECT",
+        "description": "Google Cloud Project ID",
+        "required": false,
+        "placeholder": "YOUR_PROJECT_ID"
+      },
+      {
+        "name": "GEMINI_API_KEY",
+        "description": "Gemini API Key",
+        "required": false,
+        "placeholder": "YOUR_API_KEY"
+      },
+      {
+        "name": "GOOGLE_API_KEY",
+        "description": "Google API Key",
+        "required": false,
+        "placeholder": "YOUR_API_KEY"
+      }
+    ],
+    "tools": [
+      "Google Search grounding",
+      "file operations",
+      "shell commands",
+      "web fetching"
+    ],
+    "resources": [
+      "media generation with Imagen, Veo or Lyria"
+    ]
+  },
+  {
+    "name": "Scrapling Web Scraping Framework",
+    "full_name": "D4Vinci/Scrapling",
+    "html_url": "https://github.com/D4Vinci/Scrapling",
+    "stars": 0,
+    "description": "An adaptive Web Scraping framework that handles everything from a single request to a full-scale crawl!",
+    "category": "Web & Browsing",
+    "language": "Python",
+    "installCommand": "pip install scrapling",
+    "args": [
+      "--url <TARGET_URL>"
+    ],
+    "envVars": [],
+    "tools": [
+      "fetch",
+      "parse",
+      "crawl"
+    ],
+    "resources": [
+      "selection methods",
+      "fetchers",
+      "spiders",
+      "proxy rotation",
+      "CLI",
+      "MCP"
+    ]
+  },
+  {
+    "name": "TrendRadar",
+    "full_name": "sansan0/TrendRadar",
+    "html_url": "https://github.com/sansan0/TrendRadar",
+    "stars": 59383,
+    "description": "AI-driven public opinion & trend monitor with multi-platform aggregation, RSS, and smart alerts.",
+    "category": "AI & Knowledge",
+    "language": "TypeScript",
+    "installCommand": "docker run -p 8080:8080 wantcat/trendradar",
+    "args": [
+      "--mcp-url <MCP_URL>",
+      "--rss-url <RSS_URL>"
+    ],
+    "envVars": [
+      {
+        "name": "MCP_URL",
+        "description": "Model Context Protocol URL",
+        "required": true,
+        "placeholder": "https://mcp.example.com"
+      },
+      {
+        "name": "RSS_URL",
+        "description": "RSS feed URL",
+        "required": true,
+        "placeholder": "https://example.com/rss"
+      }
+    ],
+    "tools": [
+      "AI analysis",
+      "smart alerts",
+      "RSS feed aggregation"
+    ],
+    "resources": [
+      "newsnow API",
+      "GitHub Pages"
+    ]
+  },
+  {
+    "name": "Ruflo - Multi-agent AI Harness",
+    "full_name": "ruvnet/ruflo",
+    "html_url": "https://github.com/ruvnet/ruflo",
+    "stars": 59269,
+    "description": "Orchestrate 100+ specialized AI agents across machines, teams, and trust boundaries. Ruflo adds coordinated swarms, self-learning memory, federated comms, and enterprise security to Claude Code.",
+    "category": "AI & Knowledge",
+    "language": "Rust",
+    "installCommand": "npx ruflo init",
+    "args": [],
+    "envVars": [],
+    "tools": [
+      "self-organize",
+      "learn",
+      "remember",
+      "federate",
+      "coordinate"
+    ],
+    "resources": [
+      "Claude Code",
+      "Codex",
+      "RuVector Graph Ai"
+    ]
+  },
+  {
+    "name": "Context7 Platform",
+    "full_name": "upstash/context7",
+    "html_url": "https://github.com/upstash/context7",
+    "stars": null,
+    "description": "Up-to-date code documentation and code examples for LLMs and AI code editors",
+    "category": "AI & Knowledge",
+    "language": "TypeScript",
+    "installCommand": "npx ctx7 setup",
+    "args": [],
+    "envVars": [
+      {
+        "name": "CONTEXT7_API_KEY",
+        "description": "API key for higher rate limits",
+        "required": false,
+        "placeholder": "yourApiKeyHere"
+      }
+    ],
+    "tools": [
+      "resolve-library-id",
+      "query-docs"
+    ],
+    "resources": [
+      "CLI Reference",
+      "MCP Clients",
+      "Adding Libraries",
+      "Troubleshooting",
+      "API Reference",
+      "Developer Guide"
+    ]
+  },
+  {
+    "name": "Chrome DevTools MCP Server",
+    "full_name": "ChromeDevTools/chrome-devtools-mcp",
+    "html_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+    "stars": 43526,
+    "description": "Chrome DevTools for agents lets your coding agent control and inspect a live Chrome browser, providing reliable automation, in-depth debugging, and performance analysis.",
+    "category": "Developer Tools",
+    "language": "TypeScript",
+    "installCommand": "npx",
+    "args": [
+      "-y",
+      "chrome-devtools-mcp@latest"
+    ],
+    "envVars": [
+      {
+        "name": "CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS",
+        "description": "Disable usage statistics collection",
+        "required": false,
+        "placeholder": "true"
+      },
+      {
+        "name": "CHROME_DEVTOOLS_MCP_NO_UPDATE_CHECKS",
+        "description": "Disable update checks",
+        "required": false,
+        "placeholder": "true"
+      }
+    ],
+    "tools": [
+      "get_performance_insights",
+      "advanced_browser_debugging",
+      "reliable_automation"
+    ],
+    "resources": [
+      "Chrome browser instance",
+      "DevTools"
+    ]
+  },
+  {
+    "name": "UI-TARS Desktop",
+    "full_name": "bytedance/UI-TARS-desktop",
+    "html_url": "https://github.com/bytedance/UI-TARS-desktop",
+    "stars": 0,
+    "description": "A desktop application that provides a native GUI Agent based on the UI-TARS model.",
+    "category": "AI & Knowledge",
+    "language": "TypeScript",
+    "installCommand": "npm install @agent-tars/cli",
+    "args": [
+      "--local",
+      "--remote"
+    ],
+    "envVars": [],
+    "tools": [
+      "GUI Agent",
+      "Vision"
+    ],
+    "resources": [
+      "MCP tools",
+      "UI-TARS model"
+    ]
+  },
+  {
+    "name": "GitHub MCP Server",
+    "full_name": "github/github-mcp-server",
+    "html_url": "https://github.com/github/github-mcp-server",
+    "stars": 30637,
+    "description": "The GitHub MCP Server connects AI tools directly to GitHub's platform, enabling AI agents, assistants, and chatbots to read repositories and code files, manage issues and PRs, analyze code, and automate workflows.",
+    "category": "Developer Tools",
+    "language": "Go",
+    "installCommand": "Install in VS Code",
+    "args": [
+      "--url",
+      "https://api.githubcopilot.com/mcp/"
+    ],
+    "envVars": [
+      {
+        "name": "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "description": "GitHub Personal Access Token",
+        "required": true,
+        "placeholder": "ghp_yourTokenHere"
+      }
+    ],
+    "tools": [
+      "read_file",
+      "query",
+      "search_web",
+      "manage_issues",
+      "analyze_code",
+      "automate_workflows"
+    ],
+    "resources": [
+      "repositories",
+      "code_files",
+      "issues",
+      "PRs",
+      "codebase"
+    ]
+  },
+  {
+    "name": "GPT Researcher",
+    "full_name": "assafelovic/gpt-researcher",
+    "html_url": "https://github.com/assafelovic/gpt-researcher",
+    "stars": 0,
+    "description": "An autonomous agent that conducts deep research on any data using any LLM providers",
+    "category": "AI & Knowledge",
+    "language": "Python",
+    "installCommand": "pip install gpt-researcher",
+    "args": [
+      "query"
+    ],
+    "envVars": [
+      {
+        "name": "OPENAI_API_KEY",
+        "description": "OpenAI API Key",
+        "required": true,
+        "placeholder": "Your OpenAI API Key here"
+      },
+      {
+        "name": "TAVILY_API_KEY",
+        "description": "Tavily API Key",
+        "required": true,
+        "placeholder": "Your Tavily API Key here"
+      },
+      {
+        "name": "LANGCHAIN_TRACING_V2",
+        "description": "LangChain Tracing V2",
+        "required": false,
+        "placeholder": "true"
+      },
+      {
+        "name": "LANGCHAIN_API_KEY",
+        "description": "LangChain API Key",
+        "required": false,
+        "placeholder": "Your LangChain API Key here"
+      },
+      {
+        "name": "OPENAI_BASE_URL",
+        "description": "Custom OpenAI-compatible API base URL",
+        "required": false,
+        "placeholder": "Your custom API base URL here"
+      }
+    ],
+    "tools": [
+      "conduct_research",
+      "write_report"
+    ],
+    "resources": [
+      "web",
+      "local documents"
+    ]
+  },
+  {
+    "name": "FastMCP Server",
+    "full_name": "PrefectHQ/fastmcp",
+    "html_url": "https://github.com/PrefectHQ/fastmcp",
+    "stars": 0,
+    "description": "The fast, Pythonic way to build MCP servers and clients.",
+    "category": "Developer Tools",
+    "language": "Python",
+    "installCommand": "uv pip install fastmcp",
+    "args": [],
+    "envVars": [],
+    "tools": [
+      "add"
+    ],
+    "resources": []
+  },
+  {
+    "name": "Serena MCP Server",
+    "full_name": "oraios/serena",
+    "html_url": "https://github.com/oraios/serena",
+    "stars": 0,
+    "description": "A powerful MCP toolkit for coding, providing semantic retrieval and editing capabilities - the IDE for your agent",
+    "category": "Developer Tools",
+    "language": "Unknown",
+    "installCommand": "Unknown",
+    "args": [],
+    "envVars": [],
+    "tools": [
+      "semantic code retrieval",
+      "editing",
+      "refactoring",
+      "debugging"
+    ],
+    "resources": [
+      "symbolic understanding of code",
+      "memory system for long-lived agent workflows"
+    ]
+  },
+  {
+    "name": "Activepieces MCP Server",
+    "full_name": "activepieces/activepieces",
+    "html_url": "https://github.com/activepieces/activepieces",
+    "stars": 0,
+    "description": "An open source replacement for Zapier, providing an all-in-one AI automation designed to be extensible through a type-safe pieces framework written in TypeScript.",
+    "category": "AI & Knowledge",
+    "language": "TypeScript",
+    "installCommand": "npm install",
+    "args": [],
+    "envVars": [],
+    "tools": [
+      "Loops",
+      "Branches",
+      "Auto Retries",
+      "HTTP",
+      "Code with NPM",
+      "ASK AI in Code Piece"
+    ],
+    "resources": [
+      "Google Sheets",
+      "OpenAI",
+      "Discord",
+      "RSS",
+      "200+ other services"
+    ]
+  },
+  {
+    "name": "n8n-MCP",
+    "full_name": "czlonkowski/n8n-mcp",
+    "html_url": "https://github.com/czlonkowski/n8n-mcp",
+    "stars": 21720,
+    "description": "A Model Context Protocol (MCP) server that provides AI assistants with comprehensive access to n8n node documentation, properties, and operations.",
+    "category": "AI & Knowledge",
+    "language": "TypeScript",
+    "installCommand": "npx",
+    "args": [
+      "n8n-mcp"
+    ],
+    "envVars": [
+      {
+        "name": "N8N_MCP_API_KEY",
+        "description": "API key for n8n-MCP",
+        "required": true,
+        "placeholder": "your_api_key_here"
+      }
+    ],
+    "tools": [
+      "read_file",
+      "query",
+      "search_web",
+      "tools_documentation",
+      "search_templates",
+      "search_nodes",
+      "get_node",
+      "validate_node"
+    ],
+    "resources": [
+      "n8n nodes",
+      "node properties",
+      "node operations",
+      "documentation",
+      "AI tools",
+      "real-world examples",
+      "template library",
+      "community nodes"
+    ]
+  },
+  {
+    "name": "MaxKB",
+    "full_name": "1Panel-dev/MaxKB",
+    "html_url": "https://github.com/1Panel-dev/MaxKB",
+    "stars": 0,
+    "description": "An open-source platform for building enterprise-grade agents, integrating Retrieval-Augmented Generation pipelines, supporting robust workflows, and providing advanced MCP tool-use capabilities.",
+    "category": "AI & Knowledge",
+    "language": "Python",
+    "installCommand": "docker run",
+    "args": [
+      "-d",
+      "--name=maxkb",
+      "--restart=always",
+      "-p 8080:8080",
+      "-v ~/.maxkb:/var/lib/postgresql/data",
+      "-v ~/.python-packages:/opt/maxkb/app/sandbox/python-packages",
+      "1panel/maxkb"
+    ],
+    "envVars": [],
+    "tools": [
+      "RAG Pipeline",
+      "Agentic Workflow",
+      "Seamless Integration",
+      "Model-Agnostic",
+      "Multi Modal"
+    ],
+    "resources": [
+      "Retrieval-Augmented Generation pipelines",
+      "robust workflows",
+      "MCP tool-use capabilities"
+    ]
+  }
+]

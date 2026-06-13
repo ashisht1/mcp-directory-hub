@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS SAM Stack for Model Context Protocol (MCP) Registry Ingestion Automation
+
+Resources:
+  # S3 Bucket for Storing Registry Database JSON
+  McpRegistryStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - HEAD
+            AllowedOrigins:
+              - "*" # Enable CORS so the Vercel site can fetch the database directly
+            MaxAge: 3000
+
+  # S3 Bucket Policy to allow Public GetObject access
+  McpRegistryStorageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref McpRegistryStorageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::${McpRegistryStorageBucket}/mcp_servers_data.json'
+
+  # Lambda Ingestion Agent Function
+  McpRegistryUpdaterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: deployment.zip
+      Handler: mcp_updater_lambda.lambda_handler
+      Runtime: python3.12
+      Timeout: 300 # 5 minutes timeout to allow time for multiple Bedrock invokes
+      MemorySize: 256
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref McpRegistryStorageBucket
+          BEDROCK_MODEL_ID: "meta.llama3-70b-instruct-v1:0"
+      Policies:
+        # S3 Write/read permissions for the bucket
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+                - s3:GetObject
+              Resource: !Sub 'arn:aws:s3:::${McpRegistryStorageBucket}/*'
+        # Bedrock permissions for Llama 3 converse
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:Converse
+              Resource: '*'
+      Events:
+        DailyCrawlTrigger:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "cron(0 10 * * ? *)" # Runs daily at 10:00 AM UTC (15:30 IST)
+            State: ENABLED
+
+Outputs:
+  McpStorageBucketName:
+    Description: "Name of the S3 bucket storing registry data"
+    Value: !Ref McpRegistryStorageBucket
+  McpStorageBucketUrl:
+    Description: "URL of the registry database file in S3"
+    Value: !Sub 'https://${McpRegistryStorageBucket}.s3.amazonaws.com/mcp_servers_data.json'
