@@ -487,20 +487,22 @@ export default function App() {
                     background: viewMode === 'grid' ? 'var(--color-primary)' : 'transparent',
                     border: 'none',
                     color: viewMode === 'grid' ? '#ffffff' : 'var(--text-muted)',
-                    padding: '8px 12px',
+                    padding: '8px 16px',
                     borderRadius: '6px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     height: '100%',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    gap: '6px'
                   }}
                   title="Grid View"
                   aria-label="Switch to card grid view"
                   aria-pressed={viewMode === 'grid'}
                 >
-                  <LayoutGrid size={18} aria-hidden="true" />
+                  <LayoutGrid size={16} aria-hidden="true" />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Grid</span>
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
@@ -508,20 +510,22 @@ export default function App() {
                     background: viewMode === 'list' ? 'var(--color-primary)' : 'transparent',
                     border: 'none',
                     color: viewMode === 'list' ? '#ffffff' : 'var(--text-muted)',
-                    padding: '8px 12px',
+                    padding: '8px 16px',
                     borderRadius: '6px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     height: '100%',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    gap: '6px'
                   }}
                   title="List View"
                   aria-label="Switch to compact list row view"
                   aria-pressed={viewMode === 'list'}
                 >
-                  <List size={18} />
+                  <List size={16} aria-hidden="true" />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>List</span>
                 </button>
               </div>
             </div>
