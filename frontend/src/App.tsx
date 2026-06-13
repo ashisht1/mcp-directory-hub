@@ -15,7 +15,9 @@ import {
   Activity,
   CheckCircle2,
   Terminal,
-  Mail
+  Mail,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import mcpServersJson from './data/mcp_servers_data.json';
 
@@ -182,6 +184,9 @@ export default function App() {
   const [agentStatus, setAgentStatus] = useState<any>(null);
   const [auditReport, setAuditReport] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [paginationMode, setPaginationMode] = useState<'pages' | 'infinite'>('pages');
+  const [visibleCount, setVisibleCount] = useState(6);
   const itemsPerPage = 6;
   
   // Modal state
@@ -189,6 +194,31 @@ export default function App() {
   const [clientType, setClientType] = useState<'cursor' | 'claude' | 'windsurf'>('cursor');
   const [envInputs, setEnvInputs] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
+
+  // Filter logic
+  const filteredServers = servers.filter(server => {
+    const matchesSearch = 
+      server.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      server.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      server.full_name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const matchesCategory = selectedCategory === 'All' || server.category === selectedCategory;
+    const matchesLanguage = selectedLanguage === 'All' || server.language.toLowerCase() === selectedLanguage.toLowerCase();
+    
+    // Check target segment (default to 'developer' if empty/missing)
+    const serverSegment = server.target_user_segment || 'developer';
+    const matchesSegment = selectedSegment === 'All' || serverSegment === selectedSegment;
+    
+    return matchesSearch && matchesCategory && matchesLanguage && matchesSegment;
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredServers.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentServers = paginationMode === 'pages'
+    ? filteredServers.slice(indexOfFirstItem, indexOfLastItem)
+    : filteredServers.slice(0, visibleCount);
 
   const getS3Url = (filename: string) => {
     const dbUrl = import.meta.env.VITE_S3_DB_URL;
@@ -255,7 +285,23 @@ export default function App() {
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
+    setVisibleCount(itemsPerPage);
   }, [searchTerm, selectedCategory, selectedLanguage, selectedSegment]);
+
+  // Infinite scroll listener
+  useEffect(() => {
+    if (paginationMode !== 'infinite') return;
+    const handleScroll = () => {
+      if (
+        window.innerHeight + document.documentElement.scrollTop + 100 >=
+        document.documentElement.offsetHeight
+      ) {
+        setVisibleCount(prev => Math.min(prev + itemsPerPage, filteredServers.length));
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [paginationMode, filteredServers.length]);
 
   // Sync environment variables inputs when a server is selected
   useEffect(() => {
@@ -285,28 +331,7 @@ export default function App() {
   // Languages list
   const languages = ['All', 'TypeScript', 'Python', 'Go', 'Rust'];
 
-  // Filter logic
-  const filteredServers = servers.filter(server => {
-    const matchesSearch = 
-      server.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      server.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      server.full_name.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesCategory = selectedCategory === 'All' || server.category === selectedCategory;
-    const matchesLanguage = selectedLanguage === 'All' || server.language.toLowerCase() === selectedLanguage.toLowerCase();
-    
-    // Check target segment (default to 'developer' if empty/missing)
-    const serverSegment = server.target_user_segment || 'developer';
-    const matchesSegment = selectedSegment === 'All' || serverSegment === selectedSegment;
-    
-    return matchesSearch && matchesCategory && matchesLanguage && matchesSegment;
-  });
 
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredServers.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentServers = filteredServers.slice(indexOfFirstItem, indexOfLastItem);
 
   // Category Icon Helper
   const getCategoryIcon = (cat: string) => {
@@ -414,8 +439,8 @@ export default function App() {
       {activeTab === 'registry' ? (
         <>
           {/* Filter and Search Bar */}
-          <section className="controls-bar">
-            <div className="search-wrapper">
+          <section className="controls-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="search-wrapper" style={{ flex: '1 1 300px' }}>
               <Search className="search-icon" size={20} />
               <input 
                 type="text" 
@@ -426,16 +451,73 @@ export default function App() {
               />
             </div>
             
-            <select 
-              className="filter-select"
-              value={selectedLanguage}
-              onChange={(e) => setSelectedLanguage(e.target.value)}
-            >
-              <option value="All">All Languages</option>
-              {languages.slice(1).map(lang => (
-                <option key={lang} value={lang}>{lang}</option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <select 
+                className="filter-select"
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+              >
+                <option value="All">All Languages</option>
+                {languages.slice(1).map(lang => (
+                  <option key={lang} value={lang}>{lang}</option>
+                ))}
+              </select>
+
+              <select 
+                className="filter-select"
+                value={paginationMode}
+                onChange={(e) => {
+                  setPaginationMode(e.target.value as 'pages' | 'infinite');
+                  setCurrentPage(1);
+                  setVisibleCount(6);
+                }}
+                style={{ minWidth: '150px' }}
+              >
+                <option value="pages">Pagination: Pages</option>
+                <option value="infinite">Pagination: Scroll</option>
+              </select>
+              
+              <div className="glass-panel" style={{ display: 'flex', padding: '2px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', height: '42px', alignItems: 'center' }}>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  style={{
+                    background: viewMode === 'grid' ? 'var(--color-primary)' : 'transparent',
+                    border: 'none',
+                    color: viewMode === 'grid' ? '#ffffff' : 'var(--text-muted)',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    transition: 'all 0.2s ease'
+                  }}
+                  title="Grid View"
+                >
+                  <LayoutGrid size={18} />
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  style={{
+                    background: viewMode === 'list' ? 'var(--color-primary)' : 'transparent',
+                    border: 'none',
+                    color: viewMode === 'list' ? '#ffffff' : 'var(--text-muted)',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    transition: 'all 0.2s ease'
+                  }}
+                  title="List View"
+                >
+                  <List size={18} />
+                </button>
+              </div>
+            </div>
           </section>
 
           {/* User Segment Filters */}
@@ -469,57 +551,114 @@ export default function App() {
             ))}
           </section>
 
-          {/* Grid of Servers */}
-          <main className="server-grid">
-            {filteredServers.length > 0 ? (
-              currentServers.map(server => (
+          {/* List or Grid view container */}
+          {filteredServers.length > 0 ? (
+            <main className={viewMode === 'grid' ? 'server-grid' : ''} style={viewMode === 'list' ? { display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' } : {}}>
+              {currentServers.map(server => (
                 <article 
                   key={server.full_name} 
                   className="glass-panel server-card"
                   onClick={() => setSelectedServer(server)}
+                  style={viewMode === 'list' ? {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '16px 24px',
+                    gap: '24px',
+                    width: '100%',
+                    height: 'auto',
+                    minHeight: '80px'
+                  } : {}}
                 >
-                  <div className="card-header">
-                    <div className="card-title-group">
-                      <h3 className="card-title">{server.name}</h3>
-                      <span className="card-subtitle">{server.full_name}</span>
-                    </div>
-                    {server.stars > 0 && (
-                      <div className="star-badge">
-                        <Star size={14} fill="currentColor" />
-                        <span>{server.stars}</span>
+                  {viewMode === 'grid' ? (
+                    <>
+                      <div className="card-header">
+                        <div className="card-title-group">
+                          <h3 className="card-title">{server.name}</h3>
+                          <span className="card-subtitle">{server.full_name}</span>
+                        </div>
+                        {server.stars > 0 && (
+                          <div className="star-badge">
+                            <Star size={14} fill="currentColor" />
+                            <span>{server.stars}</span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  
-                  <p className="card-description">{server.description}</p>
-                  
-                  <div className="card-footer">
-                    <span className="category-tag" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {getCategoryIcon(server.category)}
-                      {server.category}
-                    </span>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                        {server.target_user_segment || 'developer'}
-                      </span>
-                      <span className={`badge badge-${server.language.toLowerCase() === 'typescript' ? 'ts' : server.language.toLowerCase() === 'python' ? 'py' : server.language.toLowerCase() === 'go' ? 'go' : 'rust'}`}>
-                        {server.language}
-                      </span>
-                    </div>
-                  </div>
+                      
+                      <p className="card-description">{server.description}</p>
+                      
+                      <div className="card-footer">
+                        <span className="category-tag" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          {getCategoryIcon(server.category)}
+                          {server.category}
+                        </span>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                            {server.target_user_segment || 'developer'}
+                          </span>
+                          <span className={`badge badge-${server.language.toLowerCase() === 'typescript' ? 'ts' : server.language.toLowerCase() === 'python' ? 'py' : server.language.toLowerCase() === 'go' ? 'go' : 'rust'}`}>
+                            {server.language}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Compact List Row Layout */}
+                      <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 30%', minWidth: '200px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <h3 className="card-title" style={{ margin: 0, fontSize: '1.15rem' }}>{server.name}</h3>
+                          {server.stars > 0 && (
+                            <div className="star-badge" style={{ padding: '2px 6px', fontSize: '0.75rem' }}>
+                              <Star size={12} fill="currentColor" />
+                              <span>{server.stars}</span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="card-subtitle" style={{ fontSize: '0.75rem', marginTop: '2px' }}>{server.full_name}</span>
+                      </div>
+
+                      <p style={{
+                        margin: 0,
+                        fontSize: '0.85rem',
+                        lineHeight: '1.4',
+                        color: 'var(--text-muted)',
+                        flex: '1 1 40%',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {server.description}
+                      </p>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '0 0 auto', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <span className="category-tag" style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
+                          {getCategoryIcon(server.category)}
+                          {server.category}
+                        </span>
+                        <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                          {server.target_user_segment || 'developer'}
+                        </span>
+                        <span className={`badge badge-${server.language.toLowerCase() === 'typescript' ? 'ts' : server.language.toLowerCase() === 'python' ? 'py' : server.language.toLowerCase() === 'go' ? 'go' : 'rust'}`}>
+                          {server.language}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </article>
-              ))
-            ) : (
-              <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-                <AlertCircle size={40} style={{ color: 'var(--text-muted)', marginBottom: '16px' }} />
-                <h3>No MCP Servers found</h3>
-                <p>Try refining your search query or choosing another category.</p>
-              </div>
-            )}
-          </main>
+              ))}
+            </main>
+          ) : (
+            <div className="empty-state" style={{ padding: '60px 20px', textAlign: 'center' }}>
+              <AlertCircle size={40} style={{ color: 'var(--text-muted)', marginBottom: '16px' }} />
+              <h3>No MCP Servers found</h3>
+              <p>Try refining your search query or choosing another category.</p>
+            </div>
+          )}
 
           {/* Pagination Controls */}
-          {totalPages > 1 && (
+          {paginationMode === 'pages' && totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
               <button 
                 className="category-chip"
@@ -540,6 +679,15 @@ export default function App() {
               >
                 Next
               </button>
+            </div>
+          )}
+
+          {/* Infinite Scroll loading indicator */}
+          {paginationMode === 'infinite' && visibleCount < filteredServers.length && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '24px 0' }}>
+              <div className="category-chip" style={{ background: 'rgba(255,255,255,0.03)', borderStyle: 'dashed', cursor: 'default' }}>
+                🫵 Scroll down to load more tools... ({visibleCount} of {filteredServers.length} loaded)
+              </div>
             </div>
           )}
         </>
