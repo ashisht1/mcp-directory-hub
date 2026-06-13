@@ -521,3 +521,32 @@ h1, h2, h3, h4 {
   color: #ffffff;
   margin-bottom: 8px;
 }
+
+/* Responsive List View Layout */
+.server-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.server-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+@media (min-width: 768px) {
+  .server-card-list {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    gap: 24px;
+    height: auto;
+    min-height: 80px;
+  }
+}

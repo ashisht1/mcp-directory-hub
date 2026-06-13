@@ -441,13 +441,14 @@ export default function App() {
           {/* Filter and Search Bar */}
           <section className="controls-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="search-wrapper" style={{ flex: '1 1 300px' }}>
-              <Search className="search-icon" size={20} />
+              <Search className="search-icon" size={20} aria-hidden="true" />
               <input 
                 type="text" 
                 placeholder="Search MCP servers (e.g. postgres, git)..." 
                 className="search-input"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label="Search MCP servers"
               />
             </div>
             
@@ -456,6 +457,7 @@ export default function App() {
                 className="filter-select"
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
+                aria-label="Filter by programming language"
               >
                 <option value="All">All Languages</option>
                 {languages.slice(1).map(lang => (
@@ -472,6 +474,7 @@ export default function App() {
                   setVisibleCount(6);
                 }}
                 style={{ minWidth: '150px' }}
+                aria-label="Select pagination mode"
               >
                 <option value="pages">Pagination: Pages</option>
                 <option value="infinite">Pagination: Scroll</option>
@@ -494,8 +497,10 @@ export default function App() {
                     transition: 'all 0.2s ease'
                   }}
                   title="Grid View"
+                  aria-label="Switch to card grid view"
+                  aria-pressed={viewMode === 'grid'}
                 >
-                  <LayoutGrid size={18} />
+                  <LayoutGrid size={18} aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
@@ -513,6 +518,8 @@ export default function App() {
                     transition: 'all 0.2s ease'
                   }}
                   title="List View"
+                  aria-label="Switch to compact list row view"
+                  aria-pressed={viewMode === 'list'}
                 >
                   <List size={18} />
                 </button>
@@ -553,22 +560,25 @@ export default function App() {
 
           {/* List or Grid view container */}
           {filteredServers.length > 0 ? (
-            <main className={viewMode === 'grid' ? 'server-grid' : ''} style={viewMode === 'list' ? { display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' } : {}}>
+            <main 
+              className={viewMode === 'grid' ? 'server-grid' : 'server-list-container'}
+              role="feed"
+              aria-label="MCP Server Catalog"
+            >
               {currentServers.map(server => (
                 <article 
                   key={server.full_name} 
-                  className="glass-panel server-card"
+                  className={`glass-panel ${viewMode === 'grid' ? 'server-card' : 'server-card-list'}`}
                   onClick={() => setSelectedServer(server)}
-                  style={viewMode === 'list' ? {
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px 24px',
-                    gap: '24px',
-                    width: '100%',
-                    height: 'auto',
-                    minHeight: '80px'
-                  } : {}}
+                  tabIndex={0}
+                  role="article"
+                  aria-label={`${server.name} server catalog details`}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedServer(server);
+                    }
+                  }}
                 >
                   {viewMode === 'grid' ? (
                     <>
