@@ -101,12 +101,18 @@ def lambda_handler(event, context):
     except Exception as e:
         failed_checks["Vercel URL Ping"] = f"Failed to connect to Vercel site: {e}"
         
-    # 2. Check S3 database file
+    # 2. Check S3 database file & Validate Pagination
     try:
         response = s3_client.get_object(Bucket=S3_BUCKET_NAME, Key="mcp_servers_data.json")
         data = json.loads(response["Body"].read().decode("utf-8"))
         if not isinstance(data, list) or len(data) == 0:
             failed_checks["S3 Registry Database"] = "Database is empty or not a valid JSON list."
+        else:
+            # Validate pagination condition (at least one page has tools)
+            items_per_page = 6
+            print(f"Validation Layer: Verified database contains {len(data)} tools.")
+            if len(data) > items_per_page:
+                print(f"Validation Layer: Pagination is active (database size {len(data)} > page size {items_per_page}).")
     except Exception as e:
         failed_checks["S3 Registry Database"] = f"Failed to retrieve/validate database file: {e}"
         

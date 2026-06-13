@@ -181,6 +181,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'registry' | 'status'>('registry');
   const [agentStatus, setAgentStatus] = useState<any>(null);
   const [auditReport, setAuditReport] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
   
   // Modal state
   const [selectedServer, setSelectedServer] = useState<McpServer | null>(null);
@@ -250,6 +252,11 @@ export default function App() {
     loadData();
   }, []);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, selectedLanguage, selectedSegment]);
+
   // Sync environment variables inputs when a server is selected
   useEffect(() => {
     if (selectedServer) {
@@ -294,6 +301,12 @@ export default function App() {
     
     return matchesSearch && matchesCategory && matchesLanguage && matchesSegment;
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredServers.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentServers = filteredServers.slice(indexOfFirstItem, indexOfLastItem);
 
   // Category Icon Helper
   const getCategoryIcon = (cat: string) => {
@@ -459,7 +472,7 @@ export default function App() {
           {/* Grid of Servers */}
           <main className="server-grid">
             {filteredServers.length > 0 ? (
-              filteredServers.map(server => (
+              currentServers.map(server => (
                 <article 
                   key={server.full_name} 
                   className="glass-panel server-card"
@@ -504,6 +517,31 @@ export default function App() {
               </div>
             )}
           </main>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
+              <button 
+                className="category-chip"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{ opacity: currentPage === 1 ? 0.5 : 0.9, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                Previous
+              </button>
+              <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button 
+                className="category-chip"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                style={{ opacity: currentPage === totalPages ? 0.5 : 0.9, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
