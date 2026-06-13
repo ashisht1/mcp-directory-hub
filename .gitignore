@@ -12,6 +12,7 @@ __pycache__/
 dist/
 build/
 response.json
+response_*.json
 *.log
 
 # IDEs and OS files

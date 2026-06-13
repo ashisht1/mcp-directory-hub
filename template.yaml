@@ -76,6 +76,83 @@ Resources:
             ScheduleExpression: "cron(0 10 * * ? *)" # Runs daily at 10:00 AM UTC (15:30 IST)
             State: ENABLED
 
+  # Lambda Quality Auditor Agent Function
+  McpRegistryAuditorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: deployment.zip
+      Handler: mcp_auditor_lambda.lambda_handler
+      Runtime: python3.12
+      Timeout: 300 # 5 minutes timeout to allow time for Bedrock invokes
+      MemorySize: 256
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref McpRegistryStorageBucket
+          BEDROCK_MODEL_ID: "meta.llama3-70b-instruct-v1:0"
+      Policies:
+        # S3 Write/read permissions for the bucket
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+                - s3:GetObject
+              Resource: !Sub 'arn:aws:s3:::${McpRegistryStorageBucket}/*'
+        # Bedrock permissions for Llama 3 converse
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:Converse
+              Resource: '*'
+      Events:
+        DailyAuditTrigger:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "cron(30 10 * * ? *)" # Runs daily at 10:30 AM UTC (16:00 IST), 30m after crawler
+            State: ENABLED
+
+  # Lambda System Monitor Function
+  McpRegistryMonitorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: deployment.zip
+      Handler: mcp_monitor_lambda.lambda_handler
+      Runtime: python3.12
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref McpRegistryStorageBucket
+          VERCEL_URL: "https://frontend-six-rose-30.vercel.app"
+          ALERT_EMAIL: "ashishtehri@gmail.com"
+      Policies:
+        # S3 read/write permissions for status logs
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+                - s3:PutObjectAcl
+                - s3:GetObject
+              Resource: !Sub 'arn:aws:s3:::${McpRegistryStorageBucket}/*'
+        # SES SendEmail permission for alert notifications
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: '*'
+      Events:
+        HourlyHealthCheckTrigger:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "cron(0 * * * ? *)" # Runs hourly at minute 0
+            State: ENABLED
+
 Outputs:
   McpStorageBucketName:
     Description: "Name of the S3 bucket storing registry data"
@@ -83,3 +160,4 @@ Outputs:
   McpStorageBucketUrl:
     Description: "URL of the registry database file in S3"
     Value: !Sub 'https://${McpRegistryStorageBucket}.s3.amazonaws.com/mcp_servers_data.json'
+

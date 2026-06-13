@@ -3,11 +3,43 @@ import json
 import boto3
 import urllib.request
 import urllib.error
+from datetime import datetime
 
 AWS_REGION = os.environ.get("AWS_REGION", "us-east-1")
 BEDROCK_MODEL_ID = os.environ.get("BEDROCK_MODEL_ID", "meta.llama3-70b-instruct-v1:0")
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+
+def get_current_timestamp():
+    return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def update_agent_status(s3_client, agent_name, status, message):
+    if not S3_BUCKET_NAME:
+        return
+    status_key = "mcp_agents_status.json"
+    
+    current_status = {}
+    try:
+        response = s3_client.get_object(Bucket=S3_BUCKET_NAME, Key=status_key)
+        current_status = json.loads(response["Body"].read().decode("utf-8"))
+    except Exception:
+        print("Creating new agent status log file.")
+        
+    current_status[agent_name] = {
+        "last_run": get_current_timestamp(),
+        "status": status,
+        "message": message
+    }
+    
+    try:
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=status_key,
+            Body=json.dumps(current_status, indent=2),
+            ContentType="application/json"
+        )
+    except Exception as e:
+        print(f"Error writing agent status to S3: {e}")
 
 def get_headers():
     headers = {
@@ -309,12 +341,16 @@ def lambda_handler(event, context):
         )
         print(f"Successfully uploaded mcp_servers_data.json to S3 bucket {S3_BUCKET_NAME}.")
     except Exception as e:
-        print(f"Error uploading database to S3: {e}")
+        msg = f"Error uploading database to S3: {e}"
+        print(msg)
+        update_agent_status(s3_client, "updater", "failure", msg)
         return {"statusCode": 500, "body": f"Failed to upload database: {e}"}
         
+    msg = f"Database updated. Total: {len(updated_db)}. Freshly parsed: {parsed_count}."
+    update_agent_status(s3_client, "updater", "success", msg)
     return {
         "statusCode": 200,
-        "body": json.dumps(f"Database updated. Total: {len(updated_db)}. Freshly parsed: {parsed_count}.")
+        "body": json.dumps(msg)
     }
 
 if __name__ == "__main__":

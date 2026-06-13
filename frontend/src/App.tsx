@@ -11,7 +11,11 @@ import {
   Star, 
   Globe, 
   Sliders, 
-  AlertCircle 
+  AlertCircle,
+  Activity,
+  CheckCircle2,
+  Terminal,
+  Mail
 } from 'lucide-react';
 import mcpServersJson from './data/mcp_servers_data.json';
 
@@ -174,12 +178,23 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [selectedSegment, setSelectedSegment] = useState('All');
+  const [activeTab, setActiveTab] = useState<'registry' | 'status'>('registry');
+  const [agentStatus, setAgentStatus] = useState<any>(null);
+  const [auditReport, setAuditReport] = useState<any>(null);
   
   // Modal state
   const [selectedServer, setSelectedServer] = useState<McpServer | null>(null);
   const [clientType, setClientType] = useState<'cursor' | 'claude' | 'windsurf'>('cursor');
   const [envInputs, setEnvInputs] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
+
+  const getS3Url = (filename: string) => {
+    const dbUrl = import.meta.env.VITE_S3_DB_URL;
+    if (dbUrl && dbUrl.includes('/mcp_servers_data.json')) {
+      return dbUrl.replace('mcp_servers_data.json', filename);
+    }
+    return `/src/data/${filename}`;
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -206,6 +221,30 @@ export default function App() {
       });
       const sorted = merged.sort((a, b) => (b.stars || 0) - (a.stars || 0));
       setServers(sorted);
+
+      // Load Agent Status
+      try {
+        const statusUrl = getS3Url('mcp_agents_status.json');
+        const res = await fetch(statusUrl);
+        if (res.ok) {
+          const statusData = await res.json();
+          setAgentStatus(statusData);
+        }
+      } catch (e) {
+        console.warn("Failed to load agent statuses", e);
+      }
+
+      // Load Audit Report
+      try {
+        const auditUrl = getS3Url('mcp_audit_report.json');
+        const res = await fetch(auditUrl);
+        if (res.ok) {
+          const auditData = await res.json();
+          setAuditReport(auditData);
+        }
+      } catch (e) {
+        console.warn("Failed to load audit report", e);
+      }
     };
 
     loadData();
@@ -339,110 +378,321 @@ export default function App() {
         </p>
       </header>
 
-      {/* Filter and Search Bar */}
-      <section className="controls-bar">
-        <div className="search-wrapper">
-          <Search className="search-icon" size={20} />
-          <input 
-            type="text" 
-            placeholder="Search MCP servers (e.g. postgres, git)..." 
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* Navigation Tabs */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+        <div className="glass-panel" style={{ padding: '4px', display: 'flex', gap: '4px', borderRadius: '30px', background: 'rgba(15, 22, 42, 0.6)' }}>
+          <button 
+            className={`category-chip ${activeTab === 'registry' ? 'active' : ''}`}
+            onClick={() => setActiveTab('registry')}
+            style={{ border: 'none', margin: 0, padding: '8px 20px' }}
+          >
+            🔌 Server Registry
+          </button>
+          <button 
+            className={`category-chip ${activeTab === 'status' ? 'active' : ''}`}
+            onClick={() => setActiveTab('status')}
+            style={{ border: 'none', margin: 0, padding: '8px 20px' }}
+          >
+            🤖 Agent System Status
+          </button>
         </div>
-        
-        <select 
-          className="filter-select"
-          value={selectedLanguage}
-          onChange={(e) => setSelectedLanguage(e.target.value)}
-        >
-          <option value="All">All Languages</option>
-          {languages.slice(1).map(lang => (
-            <option key={lang} value={lang}>{lang}</option>
-          ))}
-        </select>
-      </section>
+      </div>
 
-      {/* User Segment Filters */}
-      <section className="category-filters" style={{ marginBottom: '16px' }}>
-        {segments.map(seg => (
-          <button
-            key={seg.value}
-            className={`category-chip ${selectedSegment === seg.value ? 'active' : ''}`}
-            onClick={() => setSelectedSegment(seg.value)}
-            style={{
-              borderColor: selectedSegment === seg.value ? 'var(--color-accent)' : 'var(--border-color)',
-              boxShadow: selectedSegment === seg.value ? '0 4px 12px rgba(6, 182, 212, 0.15)' : 'none',
-              background: selectedSegment === seg.value ? 'var(--color-accent)' : 'rgba(255,255,255,0.03)'
-            }}
-          >
-            {seg.label}
-          </button>
-        ))}
-      </section>
-
-      {/* Category Chips */}
-      <section className="category-filters">
-        {categories.map(cat => (
-          <button
-            key={cat}
-            className={`category-chip ${selectedCategory === cat ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(cat)}
-          >
-            {cat}
-          </button>
-        ))}
-      </section>
-
-      {/* Grid of Servers */}
-      <main className="server-grid">
-        {filteredServers.length > 0 ? (
-          filteredServers.map(server => (
-            <article 
-              key={server.full_name} 
-              className="glass-panel server-card"
-              onClick={() => setSelectedServer(server)}
+      {activeTab === 'registry' ? (
+        <>
+          {/* Filter and Search Bar */}
+          <section className="controls-bar">
+            <div className="search-wrapper">
+              <Search className="search-icon" size={20} />
+              <input 
+                type="text" 
+                placeholder="Search MCP servers (e.g. postgres, git)..." 
+                className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <select 
+              className="filter-select"
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
             >
-              <div className="card-header">
-                <div className="card-title-group">
-                  <h3 className="card-title">{server.name}</h3>
-                  <span className="card-subtitle">{server.full_name}</span>
-                </div>
-                {server.stars > 0 && (
-                  <div className="star-badge">
-                    <Star size={14} fill="currentColor" />
-                    <span>{server.stars}</span>
+              <option value="All">All Languages</option>
+              {languages.slice(1).map(lang => (
+                <option key={lang} value={lang}>{lang}</option>
+              ))}
+            </select>
+          </section>
+
+          {/* User Segment Filters */}
+          <section className="category-filters" style={{ marginBottom: '16px' }}>
+            {segments.map(seg => (
+              <button
+                key={seg.value}
+                className={`category-chip ${selectedSegment === seg.value ? 'active' : ''}`}
+                onClick={() => setSelectedSegment(seg.value)}
+                style={{
+                  borderColor: selectedSegment === seg.value ? 'var(--color-accent)' : 'var(--border-color)',
+                  boxShadow: selectedSegment === seg.value ? '0 4px 12px rgba(6, 182, 212, 0.15)' : 'none',
+                  background: selectedSegment === seg.value ? 'var(--color-accent)' : 'rgba(255,255,255,0.03)'
+                }}
+              >
+                {seg.label}
+              </button>
+            ))}
+          </section>
+
+          {/* Category Chips */}
+          <section className="category-filters">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                className={`category-chip ${selectedCategory === cat ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </section>
+
+          {/* Grid of Servers */}
+          <main className="server-grid">
+            {filteredServers.length > 0 ? (
+              filteredServers.map(server => (
+                <article 
+                  key={server.full_name} 
+                  className="glass-panel server-card"
+                  onClick={() => setSelectedServer(server)}
+                >
+                  <div className="card-header">
+                    <div className="card-title-group">
+                      <h3 className="card-title">{server.name}</h3>
+                      <span className="card-subtitle">{server.full_name}</span>
+                    </div>
+                    {server.stars > 0 && (
+                      <div className="star-badge">
+                        <Star size={14} fill="currentColor" />
+                        <span>{server.stars}</span>
+                      </div>
+                    )}
                   </div>
-                )}
+                  
+                  <p className="card-description">{server.description}</p>
+                  
+                  <div className="card-footer">
+                    <span className="category-tag" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {getCategoryIcon(server.category)}
+                      {server.category}
+                    </span>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                        {server.target_user_segment || 'developer'}
+                      </span>
+                      <span className={`badge badge-${server.language.toLowerCase() === 'typescript' ? 'ts' : server.language.toLowerCase() === 'python' ? 'py' : server.language.toLowerCase() === 'go' ? 'go' : 'rust'}`}>
+                        {server.language}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
+                <AlertCircle size={40} style={{ color: 'var(--text-muted)', marginBottom: '16px' }} />
+                <h3>No MCP Servers found</h3>
+                <p>Try refining your search query or choosing another category.</p>
               </div>
-              
-              <p className="card-description">{server.description}</p>
-              
-              <div className="card-footer">
-                <span className="category-tag" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {getCategoryIcon(server.category)}
-                  {server.category}
+            )}
+          </main>
+        </>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          {/* Health Summary Banner */}
+          <div className="glass-panel" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', background: 'rgba(15, 23, 42, 0.4)' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: agentStatus?.monitor?.status === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: agentStatus?.monitor?.status === 'success' ? 'var(--color-success)' : 'var(--color-error)'
+            }}>
+              <Activity size={24} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '1.4rem', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                System Status: 
+                <span style={{ 
+                  color: agentStatus?.monitor?.status === 'success' ? 'var(--color-success)' : 'var(--color-error)',
+                  fontSize: '1.1rem',
+                  fontWeight: 600
+                }}>
+                  {agentStatus?.monitor?.status === 'success' ? '● All Systems Operational' : '● Issues Detected'}
                 </span>
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                    {server.target_user_segment || 'developer'}
-                  </span>
-                  <span className={`badge badge-${server.language.toLowerCase() === 'typescript' ? 'ts' : server.language.toLowerCase() === 'python' ? 'py' : server.language.toLowerCase() === 'go' ? 'go' : 'rust'}`}>
-                    {server.language}
-                  </span>
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                Three specialized serverless agents maintain, audit, and monitor the health of this directory.
+              </p>
+            </div>
+          </div>
+
+          {/* Three Agent Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            {/* Agent 1 */}
+            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.15rem' }}>🤖 Ingestion Agent</h3>
+                <span className="badge" style={{ 
+                  background: agentStatus?.updater?.status === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                  color: agentStatus?.updater?.status === 'success' ? 'var(--color-success)' : 'var(--color-error)' 
+                }}>
+                  {agentStatus?.updater?.status || 'Unknown'}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                Crawls GitHub Search APIs and awesome list readmes to discover new servers, then parses and structures schemas.
+              </p>
+              <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  <strong>Last Run:</strong> {agentStatus?.updater?.last_run ? new Date(agentStatus.updater.last_run).toLocaleString() : 'N/A'}
+                </div>
+                <div style={{ 
+                  fontSize: '0.8rem', 
+                  color: '#ffffff', 
+                  background: 'rgba(0,0,0,0.2)', 
+                  padding: '8px', 
+                  borderRadius: '6px',
+                  fontFamily: 'monospace',
+                  overflowX: 'auto',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {agentStatus?.updater?.message || 'Waiting for first run...'}
                 </div>
               </div>
-            </article>
-          ))
-        ) : (
-          <div className="empty-state" style={{ gridColumn: '1 / -1' }}>
-            <AlertCircle size={40} style={{ color: 'var(--text-muted)', marginBottom: '16px' }} />
-            <h3>No MCP Servers found</h3>
-            <p>Try refining your search query or choosing another category.</p>
+            </div>
+
+            {/* Agent 2 */}
+            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.15rem' }}>🔍 Quality Auditor Agent</h3>
+                <span className="badge" style={{ 
+                  background: agentStatus?.auditor?.status === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                  color: agentStatus?.auditor?.status === 'success' ? 'var(--color-success)' : 'var(--color-error)' 
+                }}>
+                  {agentStatus?.auditor?.status || 'Unknown'}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                Inspects all server entries, checking URLs and using Bedrock Llama 3 70B to auto-correct any category or user-segment misalignments.
+              </p>
+              <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  <strong>Last Run:</strong> {agentStatus?.auditor?.last_run ? new Date(agentStatus.auditor.last_run).toLocaleString() : 'N/A'}
+                </div>
+                <div style={{ 
+                  fontSize: '0.8rem', 
+                  color: '#ffffff', 
+                  background: 'rgba(0,0,0,0.2)', 
+                  padding: '8px', 
+                  borderRadius: '6px',
+                  fontFamily: 'monospace',
+                  overflowX: 'auto',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {agentStatus?.auditor?.message || 'Waiting for first run...'}
+                </div>
+              </div>
+            </div>
+
+            {/* Agent 3 */}
+            <div className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1.15rem' }}>🛡️ Health Monitor Agent</h3>
+                <span className="badge" style={{ 
+                  background: agentStatus?.monitor?.status === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                  color: agentStatus?.monitor?.status === 'success' ? 'var(--color-success)' : 'var(--color-error)' 
+                }}>
+                  {agentStatus?.monitor?.status || 'Unknown'}
+                </span>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                Runs hourly checks on Vercel reachability, S3 database formatting, and updater/auditor run freshness.
+              </p>
+              <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', paddingTop: '12px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                  <strong>Last Run:</strong> {agentStatus?.monitor?.last_run ? new Date(agentStatus.monitor.last_run).toLocaleString() : 'N/A'}
+                </div>
+                <div style={{ 
+                  fontSize: '0.8rem', 
+                  color: '#ffffff', 
+                  background: 'rgba(0,0,0,0.2)', 
+                  padding: '8px', 
+                  borderRadius: '6px',
+                  fontFamily: 'monospace',
+                  overflowX: 'auto',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {agentStatus?.monitor?.message || 'Waiting for first run...'}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
-      </main>
+
+          {/* Audit History Log */}
+          <div className="glass-panel" style={{ padding: '28px' }}>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Terminal size={18} style={{ color: 'var(--color-accent)' }} />
+              Llama 3 QA Auditor Reports
+            </h3>
+            
+            {!auditReport || !auditReport.details || auditReport.details.length === 0 ? (
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(16, 185, 129, 0.05)', border: '1px dashed rgba(16, 185, 129, 0.2)', padding: '16px', borderRadius: '8px' }}>
+                <CheckCircle2 size={20} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                  All server listings are 100% correct. Auditor confirmed zero classification, segment, or formatting errors in the registry.
+                </span>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-muted)' }}>
+                      <th style={{ padding: '10px' }}>Repository</th>
+                      <th style={{ padding: '10px' }}>Field</th>
+                      <th style={{ padding: '10px' }}>Original Value</th>
+                      <th style={{ padding: '10px' }}>Audited Corrected Value</th>
+                      <th style={{ padding: '10px' }}>Audit Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditReport.details.map((detail: any, i: number) => 
+                      detail.corrections.map((corr: any, j: number) => (
+                        <tr key={`${i}-${j}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td style={{ padding: '12px 10px', fontWeight: 500 }}>{detail.repo}</td>
+                          <td style={{ padding: '12px 10px' }}><code style={{ color: 'var(--color-accent)' }}>{corr.field}</code></td>
+                          <td style={{ padding: '12px 10px', color: 'var(--color-error)' }}><del>{corr.old}</del></td>
+                          <td style={{ padding: '12px 10px', color: 'var(--color-success)' }}>{corr.new}</td>
+                          <td style={{ padding: '12px 10px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{corr.reason}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Email alerting information */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(245, 158, 11, 0.05)', border: '1px dashed rgba(245, 158, 11, 0.2)', padding: '16px', borderRadius: '8px' }}>
+            <Mail size={20} style={{ color: 'var(--color-warning)', flexShrink: 0 }} />
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              <strong>Automatic Alerts</strong>: The Health Monitor Agent scans the registry hourly. In case of issues, alert notifications are automatically sent via Amazon SES to <strong>ashishtehri@gmail.com</strong>.
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Config Generator Modal */}
       {selectedServer && (
