@@ -174,13 +174,116 @@ const SEED_SERVERS: McpServer[] = [
   }
 ];
 
+interface McpResource {
+  id: string;
+  name: string;
+  type: 'tool' | 'learning';
+  category: string;
+  description: string;
+  url: string;
+  icon: string;
+}
+
+const RESOURCE_DATA: McpResource[] = [
+  {
+    id: "claude-desktop",
+    name: "Claude Desktop Client",
+    type: "tool",
+    category: "AI Client",
+    description: "Official desktop app for Claude with native, seamless Model Context Protocol support.",
+    url: "https://modelcontextprotocol.io/quickstart/user",
+    icon: "💻"
+  },
+  {
+    id: "cursor-editor",
+    name: "Cursor AI Editor",
+    type: "tool",
+    category: "AI Editor",
+    description: "AI-first code editor with built-in MCP server integration for agentic software development.",
+    url: "https://cursor.sh",
+    icon: "🚀"
+  },
+  {
+    id: "windsurf-ide",
+    name: "Windsurf AI IDE",
+    type: "tool",
+    category: "AI Editor",
+    description: "Codeium's agentic IDE powered by MCP servers for interactive coding assistants.",
+    url: "https://codeium.com/windsurf",
+    icon: "🏄‍♂️"
+  },
+  {
+    id: "zed-editor",
+    name: "Zed Code Editor",
+    type: "tool",
+    category: "AI Editor",
+    description: "High-performance, collaborative code editor featuring built-in, native MCP support.",
+    url: "https://zed.dev",
+    icon: "⚡"
+  },
+  {
+    id: "mcp-docs",
+    name: "Official MCP Documentation",
+    type: "learning",
+    category: "Documentation",
+    description: "Comprehensive specs, quickstarts, and architectural guides from the core anthropic team.",
+    url: "https://modelcontextprotocol.io",
+    icon: "📚"
+  },
+  {
+    id: "awesome-mcp",
+    name: "Awesome MCP Servers List",
+    type: "learning",
+    category: "Community",
+    description: "A large community-curated catalog of open-source MCP servers, tools, and clients.",
+    url: "https://github.com/punkpeye/awesome-mcp-servers",
+    icon: "🌟"
+  },
+  {
+    id: "ts-sdk",
+    name: "TypeScript MCP SDK",
+    type: "learning",
+    category: "SDK",
+    description: "Official npm package to write type-safe Model Context Protocol servers in TypeScript/Node.",
+    url: "https://github.com/modelcontextprotocol/typescript-sdk",
+    icon: "🛠️"
+  },
+  {
+    id: "py-sdk",
+    name: "Python MCP SDK",
+    type: "learning",
+    category: "SDK",
+    description: "Official python package for building custom servers and wrapping command line APIs.",
+    url: "https://github.com/modelcontextprotocol/python-sdk",
+    icon: "🐍"
+  },
+  {
+    id: "kotlin-sdk",
+    name: "Kotlin MCP SDK",
+    type: "learning",
+    category: "SDK",
+    description: "Official SDK for building JVM-based servers, simplifying Android and Java tool integrations.",
+    url: "https://github.com/modelcontextprotocol/kotlin-sdk",
+    icon: "☕"
+  },
+  {
+    id: "mcp-quickstart",
+    name: "MCP Quickstart Tutorial",
+    type: "learning",
+    category: "Tutorial",
+    description: "A step-by-step developer tutorial showing how to write a simple SQLite-backed server.",
+    url: "https://modelcontextprotocol.io/quickstart",
+    icon: "🎬"
+  }
+];
+
 export default function App() {
   const [servers, setServers] = useState<McpServer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [selectedSegment, setSelectedSegment] = useState('All');
-  const [activeTab, setActiveTab] = useState<'registry' | 'status'>('registry');
+  const [activeTab, setActiveTab] = useState<'registry' | 'status' | 'resources'>('registry');
   const [agentStatus, setAgentStatus] = useState<any>(null);
   const [auditReport, setAuditReport] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -188,6 +291,11 @@ export default function App() {
   const [paginationMode, setPaginationMode] = useState<'pages' | 'infinite'>('pages');
   const [visibleCount, setVisibleCount] = useState(6);
   const itemsPerPage = 6;
+  
+  // Resources tab states
+  const [resourceSearchTerm, setResourceSearchTerm] = useState('');
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<'all' | 'tool' | 'learning'>('all');
+  const [resourceViewMode, setResourceViewMode] = useState<'icon' | 'list'>('icon');
   
   // Modal state
   const [selectedServer, setSelectedServer] = useState<McpServer | null>(null);
@@ -427,6 +535,13 @@ export default function App() {
             🔌 Server Registry
           </button>
           <button 
+            className={`category-chip ${activeTab === 'resources' ? 'active' : ''}`}
+            onClick={() => setActiveTab('resources')}
+            style={{ border: 'none', margin: 0, padding: '8px 20px' }}
+          >
+            📚 Tools & Resources
+          </button>
+          <button 
             className={`category-chip ${activeTab === 'status' ? 'active' : ''}`}
             onClick={() => setActiveTab('status')}
             style={{ border: 'none', margin: 0, padding: '8px 20px' }}
@@ -436,7 +551,7 @@ export default function App() {
         </div>
       </div>
 
-      {activeTab === 'registry' ? (
+      {activeTab === 'registry' && (
         <>
           {/* Filter and Search Bar */}
           <section className="controls-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -705,7 +820,180 @@ export default function App() {
             </div>
           )}
         </>
-      ) : (
+      )}
+
+      {activeTab === 'resources' && (
+        <>
+          {/* Filter and Search Bar for Resources */}
+          <section className="controls-bar" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="search-wrapper" style={{ flex: '1 1 300px' }}>
+              <Search className="search-icon" size={20} aria-hidden="true" />
+              <input 
+                type="text" 
+                placeholder="Search tools & learning resources..." 
+                className="search-input"
+                value={resourceSearchTerm}
+                onChange={(e) => setResourceSearchTerm(e.target.value)}
+                aria-label="Search MCP tools and learning resources"
+              />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <select 
+                className="filter-select"
+                value={resourceTypeFilter}
+                onChange={(e) => setResourceTypeFilter(e.target.value as 'all' | 'tool' | 'learning')}
+                aria-label="Filter by type"
+              >
+                <option value="all">All Types</option>
+                <option value="tool">Official Tools & Clients</option>
+                <option value="learning">Learning Resources & SDKs</option>
+              </select>
+              
+              <div className="glass-panel" style={{ display: 'flex', padding: '2px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)', height: '42px', alignItems: 'center' }}>
+                <button
+                  onClick={() => setResourceViewMode('icon')}
+                  style={{
+                    background: resourceViewMode === 'icon' ? 'var(--color-primary)' : 'transparent',
+                    border: 'none',
+                    color: resourceViewMode === 'icon' ? '#ffffff' : 'var(--text-muted)',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    transition: 'all 0.2s ease',
+                    gap: '6px'
+                  }}
+                  title="Icon Grid View"
+                  aria-label="Switch to icon grid view"
+                  aria-pressed={resourceViewMode === 'icon'}
+                >
+                  <LayoutGrid size={16} aria-hidden="true" />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Icons</span>
+                </button>
+                <button
+                  onClick={() => setResourceViewMode('list')}
+                  style={{
+                    background: resourceViewMode === 'list' ? 'var(--color-primary)' : 'transparent',
+                    border: 'none',
+                    color: resourceViewMode === 'list' ? '#ffffff' : 'var(--text-muted)',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    transition: 'all 0.2s ease',
+                    gap: '6px'
+                  }}
+                  title="List View"
+                  aria-label="Switch to list row view"
+                  aria-pressed={resourceViewMode === 'list'}
+                >
+                  <List size={16} aria-hidden="true" />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>List</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* Scrollable Resources Container */}
+          <div className="resources-scroll-container glass-panel" style={{ padding: '20px', background: 'rgba(15, 22, 42, 0.3)' }}>
+            {RESOURCE_DATA.filter(res => {
+              const matchesSearch = res.name.toLowerCase().includes(resourceSearchTerm.toLowerCase()) || 
+                                    res.description.toLowerCase().includes(resourceSearchTerm.toLowerCase()) ||
+                                    res.category.toLowerCase().includes(resourceSearchTerm.toLowerCase());
+              const matchesType = resourceTypeFilter === 'all' || res.type === resourceTypeFilter;
+              return matchesSearch && matchesType;
+            }).length > 0 ? (
+              resourceViewMode === 'icon' ? (
+                <div className="resource-icon-grid" role="feed" aria-label="MCP Tools & Resources Icon Grid">
+                  {RESOURCE_DATA.filter(res => {
+                    const matchesSearch = res.name.toLowerCase().includes(resourceSearchTerm.toLowerCase()) || 
+                                          res.description.toLowerCase().includes(resourceSearchTerm.toLowerCase()) ||
+                                          res.category.toLowerCase().includes(resourceSearchTerm.toLowerCase());
+                    const matchesType = resourceTypeFilter === 'all' || res.type === resourceTypeFilter;
+                    return matchesSearch && matchesType;
+                  }).map(res => (
+                    <a 
+                      key={res.id} 
+                      href={res.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="resource-icon-card glass-panel"
+                      style={{ background: 'rgba(30, 41, 59, 0.4)' }}
+                    >
+                      <div className="resource-card-top">
+                        <div className="resource-large-icon">{res.icon}</div>
+                        <div className="resource-info">
+                          <span className="resource-badge">{res.category}</span>
+                          <h4 className="resource-title">{res.name}</h4>
+                        </div>
+                      </div>
+                      <p className="resource-desc">{res.description}</p>
+                      <span className="resource-visit-link">
+                        Learn More <ExternalLink size={12} />
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="resource-list-container" role="feed" aria-label="MCP Tools & Resources List">
+                  {RESOURCE_DATA.filter(res => {
+                    const matchesSearch = res.name.toLowerCase().includes(resourceSearchTerm.toLowerCase()) || 
+                                          res.description.toLowerCase().includes(resourceSearchTerm.toLowerCase()) ||
+                                          res.category.toLowerCase().includes(resourceSearchTerm.toLowerCase());
+                    const matchesType = resourceTypeFilter === 'all' || res.type === resourceTypeFilter;
+                    return matchesSearch && matchesType;
+                  }).map(res => (
+                    <a 
+                      key={res.id} 
+                      href={res.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="resource-list-row glass-panel"
+                      style={{ background: 'rgba(30, 41, 59, 0.4)', textDecoration: 'none' }}
+                    >
+                      <div className="resource-list-row-left">
+                        <span style={{ fontSize: '1.6rem', marginRight: '4px' }}>{res.icon}</span>
+                        <div>
+                          <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#ffffff' }}>{res.name}</h4>
+                          <span className="resource-badge" style={{ fontSize: '0.65rem' }}>{res.category}</span>
+                        </div>
+                      </div>
+                      <p className="resource-list-desc">{res.description}</p>
+                      <div className="resource-list-row-right">
+                        <span className="resource-visit-link">
+                          Visit <ExternalLink size={12} />
+                        </span>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              )
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                <AlertCircle size={32} style={{ marginBottom: '12px', color: 'var(--text-muted)' }} />
+                <h4>No resources found matching search/filter.</h4>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Alerts Block to be visible beneath scrollable resources */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(245, 158, 11, 0.05)', border: '1px dashed rgba(245, 158, 11, 0.2)', padding: '16px', borderRadius: '8px', marginBottom: '24px' }}>
+            <Mail size={20} style={{ color: 'var(--color-warning)', flexShrink: 0 }} />
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              <strong>Automatic Alerts</strong>: The Health Monitor Agent scans the registry hourly. In case of issues, alert notifications are automatically sent via Amazon SES to <strong>ashishtehri@gmail.com</strong>.
+            </span>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'status' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           {/* Health Summary Banner */}
           <div className="glass-panel" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', background: 'rgba(15, 23, 42, 0.4)' }}>
