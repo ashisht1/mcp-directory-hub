@@ -467,5 +467,26 @@
       "robust workflows",
       "MCP tool-use capabilities"
     ]
+  },
+  {
+    "name": "agent-qa",
+    "full_name": "vostride/agent-qa",
+    "html_url": "https://github.com/vostride/agent-qa",
+    "stars": 894,
+    "description": "Natural-language testing for Web, Android and iOS, with persistent memory and validated self-improvement. Requires Node.js 24+, local project setup and model-provider access.",
+    "category": "Developer Tools",
+    "target_user_segment": "developer",
+    "language": "TypeScript",
+    "installCommand": "npx -y agent-qa",
+    "args": [
+      "mcp"
+    ],
+    "envVars": [],
+    "tools": [
+      "agent_qa_write_test",
+      "agent_qa_start_run",
+      "agent_qa_get_run_overview"
+    ],
+    "resources": []
   }
 ]

@@ -171,6 +171,27 @@ const SEED_SERVERS: McpServer[] = [
     ],
     tools: ["post_message", "get_channels", "read_history", "add_reaction"],
     resources: []
+  },
+  {
+    "name": "agent-qa",
+    "full_name": "vostride/agent-qa",
+    "html_url": "https://github.com/vostride/agent-qa",
+    "stars": 894,
+    "description": "Natural-language testing for Web, Android and iOS, with persistent memory and validated self-improvement. Requires Node.js 24+, local project setup and model-provider access.",
+    "category": "Developer Tools",
+    "target_user_segment": "developer",
+    "language": "TypeScript",
+    "installCommand": "npx -y agent-qa",
+    "args": [
+      "mcp"
+    ],
+    "envVars": [],
+    "tools": [
+      "agent_qa_write_test",
+      "agent_qa_start_run",
+      "agent_qa_get_run_overview"
+    ],
+    "resources": []
   }
 ];
 
@@ -274,6 +295,15 @@ const RESOURCE_DATA: McpResource[] = [
     description: "A step-by-step developer tutorial showing how to write a simple SQLite-backed server.",
     url: "https://modelcontextprotocol.io/quickstart",
     icon: "🎬"
+  },
+  {
+    "id": "agent-qa",
+    "name": "agent-qa",
+    "type": "tool",
+    "category": "QA Automation",
+    "description": "Test Web, Android and iOS apps in natural language through CLI or MCP, with persistent memory and validated self-improvement.",
+    "url": "https://vostride.com",
+    "icon": "🧪"
   }
 ];
 
